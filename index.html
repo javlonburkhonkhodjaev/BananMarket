@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f5c400">
+<title>Banan Market</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f5f6f8;color:#202124;font-family:Arial,sans-serif}
+header{background:#ffd21f;padding:18px 15px 15px;border-radius:0 0 22px 22px}
+.brand{font-size:27px;font-weight:900;color:#202124}
+.brand span{color:#287a37}
+.tagline{font-size:12px;margin:5px 0 15px}
+.search{width:100%;padding:13px;border:0;border-radius:12px;font-size:15px;outline:none}
+main{padding:15px;max-width:800px;margin:auto}
+h2{font-size:19px;margin:19px 0 12px}
+.categories{display:flex;gap:9px;overflow:auto;padding-bottom:5px}
+.cat{flex-shrink:0;border:1px solid #e2e2e2;background:white;border-radius:20px;padding:10px 13px}
+.cat.active{background:#202124;color:white}
+.banner{background:#24783a;color:white;padding:19px;border-radius:16px;margin-top:15px}
+.banner strong{font-size:21px}
+.banner p{font-size:13px;margin-bottom:0}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.card{background:white;border-radius:15px;padding:10px;min-width:0;box-shadow:0 2px 8px #00000008}
+.pic{height:105px;background:#fff7d6;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:53px}
+.name{font-size:14px;font-weight:bold;margin:10px 0 5px;min-height:32px}
+.muted{font-size:11px;color:#777}
+.price{font-size:15px;font-weight:bold;margin:9px 0}
+.actions{display:flex;gap:6px}
+button{cursor:pointer;font:inherit}
+.add{flex:1;background:#ffd21f;border:0;border-radius:9px;padding:10px 5px;font-size:12px;font-weight:bold}
+.fav{background:#f2f2f2;border:0;border-radius:9px;padding:8px}
+.bottom{position:sticky;bottom:0;background:white;border-top:1px solid #eee;display:flex;justify-content:space-around;padding:10px 3px calc(10px + env(safe-area-inset-bottom));}
+.nav{border:0;background:none;font-size:12px;display:grid;gap:4px;justify-items:center}
+.nav b{font-size:20px}
+.section{display:none}
+.section.active{display:block}
+.rowitem{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:13px 0;border-bottom:1px solid #eee}
+.rowitem button{border:0;background:#ffd21f;border-radius:8px;padding:7px}
+input,select{width:100%;padding:12px;border:1px solid #ddd;border-radius:10px;margin:6px 0 12px;background:white}
+.primary{width:100%;padding:13px;background:#ffd21f;border:0;border-radius:11px;font-weight:bold}
+footer{text-align:center;color:#888;font-size:11px;padding:18px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">🍌 Banan <span>Market</span></div>
+  <div class="tagline">Yaxshi xaridlar — bir joyda!</div>
+  <input id="search" class="search" placeholder="🔎 Mahsulot qidirish..." oninput="render()">
+</header>
+<main>
+  <section id="home" class="section active">
+    <div class="banner"><strong>Hammasi bir bozorda!</strong><p>Sevimli mahsulotlaringizni toping va savatga qo‘shing.</p></div>
+    <h2>Kategoriyalar</h2>
+    <div id="categories" class="categories"></div>
+    <h2 id="listTitle">Mashhur mahsulotlar</h2>
+    <div id="products" class="grid"></div>
+  </section>
+
+  <section id="cart" class="section">
+    <h2>🛒 Savatim</h2>
+    <div id="cartItems"></div>
+    <h2 id="total">Jami: 0 so‘m</h2>
+    <button class="primary" onclick="go('checkout')">Buyurtmani rasmiylashtirish</button>
+  </section>
+
+  <section id="favorites" class="section">
+    <h2>♥ Sevimlilar</h2>
+    <div id="favoriteItems" class="grid"></div>
+  </section>
+
+  <section id="checkout" class="section">
+    <h2>📦 Buyurtma</h2>
+    <form id="orderForm">
+      <label>Ism va familiya</label>
+      <input id="customer" required placeholder="Ismingiz">
+      <label>Telefon raqami</label>
+      <input id="phone" required type="tel" placeholder="+998 90 123 45 67">
+      <label>Olish usuli</label>
+      <select id="delivery">
+        <option>Kuryer orqali yetkazish</option>
+        <option>Olib ketish punkti</option>
+      </select>
+      <label>Manzil yoki olib ketish punkti</label>
+      <input id="address" required placeholder="Manzilingiz">
+      <button class="primary" type="submit">Buyurtmani tasdiqlash</button>
+    </form>
+    <p class="muted">Bu sinov prototipi. Buyurtma serverga yuborilmaydi va sotuvchiga yetib bormaydi.</p>
+    <div id="orderResult"></div>
+  </section>
+</main>
+<footer>Banan Market © 2026 · Sinov versiyasi</footer>
+<nav class="bottom">
+  <button class="nav" onclick="go('home')"><b>⌂</b>Bosh sahifa</button>
+  <button class="nav" onclick="go('favorites')"><b>♡</b>Sevimlilar</button>
+  <button class="nav" onclick="go('cart')"><b>🛒</b>Savat <span id="cartCount">0</span></button>
+</nav>
+<script>
+const categories=["Barchasi","Elektronika","Kiyim","Uy-ro‘zg‘or","Go‘zallik","Sport","Bolalar","Oziq-ovqat"];
+const products=[
+{id:1,n:"Simsiz quloqchin",c:"Elektronika",p:199000,e:"🎧"},
+{id:2,n:"Smart soat",c:"Elektronika",p:289000,e:"⌚"},
+{id:3,n:"Telefon ushlagich",c:"Elektronika",p:45000,e:"📱"},
+{id:4,n:"Futbolka",c:"Kiyim",p:89000,e:"👕"},
+{id:5,n:"Krossovka",c:"Kiyim",p:259000,e:"👟"},
+{id:6,n:"Ryukzak",c:"Kiyim",p:149000,e:"🎒"},
+{id:7,n:"Stol chirog‘i",c:"Uy-ro‘zg‘or",p:119000,e:"💡"},
+{id:8,n:"Krujka",c:"Uy-ro‘zg‘or",p:35000,e:"☕"},
+{id:9,n:"Yostiq",c:"Uy-ro‘zg‘or",p:79000,e:"🛏️"},
+{id:10,n:"Yuz kremi",c:"Go‘zallik",p:65000,e:"🧴"},
+{id:11,n:"Atir",c:"Go‘zallik",p:179000,e:"🌸"},
+{id:12,n:"Soch tarog‘i",c:"Go‘zallik",p:25000,e:"💇"},
+{id:13,n:"Futbol to‘pi",c:"Sport",p:99000,e:"⚽"},
+{id:14,n:"Sport sumkasi",c:"Sport",p:129000,e:"🏋️"},
+{id:15,n:"Bolalar o‘yinchog‘i",c:"Bolalar",p:59000,e:"🧸"},
+{id:16,n:"Rangli qalamlar",c:"Bolalar",p:29000,e:"🖍️"},
+{id:17,n:"Shokolad",c:"Oziq-ovqat",p:18000,e:"🍫"},
+{id:18,n:"Asal",c:"Oziq-ovqat",p:49000,e:"🍯"}
+];
+let category="Barchasi",cart={},favorites=[];
+const money=n=>n.toLocaleString("uz-UZ")+" so‘m";
+function renderCategories(){
+ document.getElementById("categories").innerHTML=categories.map(c=>`<button class="cat ${c===category?'active':''}" onclick="setCategory('${c}')">${c}</button>`).join("");
+}
+function setCategory(c){category=c;renderCategories();render()}
+function render(){
+ const q=document.getElementById("search").value.toLowerCase();
+ const list=products.filter(p=>(category==="Barchasi"||p.c===category)&&p.n.toLowerCase().includes(q));
+ document.getElementById("listTitle").textContent=category==="Barchasi"?"Mashhur mahsulotlar":category;
+ document.getElementById("products").innerHTML=list.map(p=>`<article class="card"><div class="pic">${p.e}</div><div class="name">${p.n}</div><div class="muted">${p.c}</div><div class="price">${money(p.p)}</div><div class="actions"><button class="add" onclick="add(${p.id})">+ Savatga</button><button class="fav" onclick="toggleFav(${p.id})">${favorites.includes(p.id)?"❤️":"♡"}</button></div></article>`).join("")||"<p>Mahsulot topilmadi.</p>";
+ renderCart();renderFavorites();
+}
+function add(id){cart[id]=(cart[id]||0)+1;renderCart()}
+function changeQty(id,d){cart[id]=(cart[id]||0)+d;if(cart[id]<=0)delete cart[id];renderCart()}
+function renderCart(){
+ let ids=Object.keys(cart);
+ document.getElementById("cartItems").innerHTML=ids.map(id=>{let p=products.find(x=>x.id==id);return `<div class="rowitem"><div>${p.e} ${p.n}<br><small>${money(p.p)}</small></div><div><button onclick="changeQty(${id},-1)">−</button> ${cart[id]} <button onclick="changeQty(${id},1)">+</button></div></div>`}).join("")||(document.getElementById("cartItems").innerHTML="<p>Savatingiz hozircha bo‘sh.</p>","");
+ let total=ids.reduce((s,id)=>s+products.find(p=>p.id==id).p*cart[id],0);
+ document.getElementById("total").textContent="Jami: "+money(total);
+ document.getElementById("cartCount").textContent=ids.reduce((s,id)=>s+cart[id],0);
+}
+function toggleFav(id){favorites.includes(id)?favorites=favorites.filter(x=>x!==id):favorites.push(id);render()}
+function renderFavorites(){
+ document.getElementById("favoriteItems").innerHTML=favorites.map(id=>{let p=products.find(x=>x.id===id);return `<article class="card"><div class="pic">${p.e}</div><div class="name">${p.n}</div><div class="price">${money(p.p)}</div><button class="add" onclick="add(${id})">+ Savatga</button><button class="fav" onclick="toggleFav(${id})">✕</button></article>`}).join("")||"<p>Sevimlilar ro‘yxati bo‘sh.</p>";
+}
+function go(id){
+ document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+ document.getElementById(id).classList.add("active");
+ if(id==="checkout"&&Object.keys(cart).length===0)document.getElementById("orderResult").textContent="Eslatma: savatingiz bo‘sh.";
+ window.scrollTo(0,0);
+}
+document.getElementById("orderForm").addEventListener("submit",function(ev){
+ ev.preventDefault();
+ if(!Object.keys(cart).length){alert("Avval savatga mahsulot qo‘shing.");return}
+ const total=Object.keys(cart).reduce((s,id)=>s+products.find(p=>p.id==id).p*cart[id],0);
+ document.getElementById("orderResult").innerHTML="<p>Sinov buyurtmasi tuzildi. Jami: <b>"+money(total)+"</b></p><p>Bu buyurtma faqat shu sahifada ko‘rinadi, do‘konga yuborilmadi.</p>";
+});
+renderCategories();render();
+</script>
+</body>
+</html>
